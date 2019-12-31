@@ -96,7 +96,7 @@ public class SurfaceNetsMeshGenerator implements MeshGenerator {
     }
 
     @Override
-    public Mesh buildMesh(DensityVolume volume) {
+    public Mesh buildMesh(DensityVolume volume, DensityVolume d) {
 
         initCubeEdges();
         initEdgeTable();

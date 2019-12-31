@@ -47,7 +47,7 @@ attribute vec3 inNormal;
 varying vec3 lightVec;
 //varying vec4 spotVec;
 
-flat varying vec2 voxelData;
+varying vec2 voxelData;
 
 #ifdef VERTEX_COLOR
   attribute vec4 inColor;
@@ -289,6 +289,7 @@ void main(){
 //   spotVec.w  = floor(g_LightDirection.w) * 0.001;
 //   lightVec.w = fract(g_LightDirection.w);
 
+    
    lightColor.w = 1.0;
    #ifdef MATERIAL_COLORS
       AmbientSum  = (m_Ambient  * g_AmbientLightColor).rgb;

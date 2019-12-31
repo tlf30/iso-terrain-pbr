@@ -165,7 +165,7 @@ MaterialDef Trilinear Lighting {
 
     Technique {
 
-        LightMode MultiPass
+        LightMode SinglePass
 
         VertexShader GLSL110:   Shaders/TrilinearLighting.vert
         FragmentShader GLSL110: Shaders/TrilinearLighting.frag
@@ -339,10 +339,6 @@ MaterialDef Trilinear Lighting {
             SPECULARMAP : SpecularMap
             PARALLAXMAP : ParallaxMap
         }
-    }
-
-    Technique {
-        LightMode FixedPipeline
     }
 
     Technique Glow {

@@ -1,11 +1,11 @@
 #extension GL_EXT_texture_array : enable
 
-#import "Common/ShaderLib/Parallax.glsllib"
-#import "Common/ShaderLib/Optics.glsllib"
+//#import "Common/ShaderLib/Parallax.glsllib"
+//#import "Common/ShaderLib/Optics.glsllib"
 #define ATTENUATION
 //#define HQ_ATTENUATION
 
-#import "Shaders/Lib/FragScattering.glsllib"
+//#import "Shaders/Lib/FragScattering.glsllib"
 
 // Trinlinear mapping related stuff
 uniform mat3 g_NormalMatrix;
@@ -28,7 +28,7 @@ uniform float m_LowResDistance;
 uniform sampler2DArray m_DiffuseArray;
 uniform sampler2DArray m_NormalArray;
 
-flat varying vec2 voxelData;
+varying vec2 voxelData;
 
 varying vec3 texCoord;
 #ifdef SEPARATE_TEXCOORD
@@ -166,19 +166,19 @@ vec2 computeLighting(in vec3 wvNorm, in vec3 wvViewDir, in vec3 wvLightDir){
 }
 #endif
 
-vec4 getColor(in float voxelId, in vec2 tc, out vec3 normal) {
+vec4 getColor(in int voxelId, in vec2 tc, out vec3 normal) {
 
     vec4 diffuseColor = texture2DArray(m_DiffuseArray, vec3(tc, voxelId));
-    vec4 normalHeight = texture2DArray(m_NormalArray, vec3(tc, voxelId));
-
-    normal = normalize((normalHeight.xyz * vec3(2.0) - vec3(1.0)));
+    
+    //vec4 normalHeight = texture2DArray(m_NormalArray, vec3(tc, voxelId));
+    //normal = normalize((normalHeight.xyz * vec3(2.0) - vec3(1.0)));
 
     return diffuseColor;
 }
 
 void main(){
 
-    float voxelId = voxelData.x;
+    int voxelId = int(voxelData.x);
 
     // vec2 newTexCoord;
     float alpha = 1.0;
@@ -190,6 +190,8 @@ void main(){
     vec3 normalTop;
 
     vec4 xColor = getColor(voxelId, texCoord.zy, normalX);
+    //vec4 yColor = xColor;
+    //vec4 zColor = xColor;
     vec4 yColor = getColor(voxelId, texCoord.xz, normalY);
     vec4 zColor = getColor(voxelId, texCoord.xy, normalZ);
 
@@ -200,6 +202,8 @@ void main(){
                         + yColor * blend.y
                         + zColor * blend.z;
 
+    gl_FragColor = diffuseColor;
+    /*
     normalX = vec3(0.0, -normalX.y, normalX.x);
     normalY = vec3(normalY.x, 0.0, normalY.y);
     normalZ = vec3(normalZ.x, -normalZ.y, 0.0);
@@ -314,4 +318,5 @@ void main(){
         #endif
     #endif
     gl_FragColor.a = alpha;
+    */
 }

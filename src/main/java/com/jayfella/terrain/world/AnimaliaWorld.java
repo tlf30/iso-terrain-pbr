@@ -37,7 +37,7 @@ public class AnimaliaWorld implements World {
         this.seed = seed;
         this.name = name;
 
-        this.worldNode = new Node(String.format("Node - %s", this.toString()));
+        this.worldNode = new Node("world");
         this.worldNode.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
 
         this.chunkLoader = new ChunkLoader(this);
@@ -52,8 +52,6 @@ public class AnimaliaWorld implements World {
         if (!worldPath.exists()) {
             worldPath.mkdirs();
         }
-
-
     }
 
     @Override

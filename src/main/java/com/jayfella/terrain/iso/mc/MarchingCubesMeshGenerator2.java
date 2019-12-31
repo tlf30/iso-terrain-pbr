@@ -395,7 +395,8 @@ public class MarchingCubesMeshGenerator2 implements MeshGenerator {
         voxelArray = voxels.toArray(voxelArray);
 
         Mesh mesh = new Mesh();
-        mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(voxelArray));
+        //mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(voxelArray));
+        mesh.setBuffer(Type.TexCoord8, 2, BufferUtils.createFloatBuffer(voxelArray));
 
         FloatBuffer pb = BufferUtils.createFloatBuffer(vertArray);
         mesh.setBuffer(Type.Position, 3, pb);
