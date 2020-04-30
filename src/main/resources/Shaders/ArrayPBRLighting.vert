@@ -4,12 +4,12 @@
 #import "Common/ShaderLib/MorphAnim.glsllib"
 
 uniform vec4 m_BaseColor;
+uniform vec3 m_WorldOffset;
 uniform vec4 g_AmbientLightColor;
-varying vec2 texCoord;
+varying vec3 texCoord;
+varying vec3 worldNormal;
 
-#if defined(HAS_COLORMAP) || (defined(HAS_LIGHTMAP) && !defined(SEPARATE_TEXCOORD))
-    #define NEED_TEXCOORD8
-#endif
+#define NEED_TEXCOORD8
 
 #ifdef NEED_TEXCOORD8
     in vec3 inTexCoord8;
@@ -43,6 +43,8 @@ void main(){
     vec4 modelSpacePos = vec4(inPosition, 1.0);
     vec3 modelSpaceNorm = inNormal;
 
+    texCoord = (g_WorldMatrix * modelSpacePos).xyz + m_WorldOffset;
+
     #if  ( defined(NORMALMAP) || defined(PARALLAXMAP)) && !defined(VERTEX_LIGHTING)
          vec3 modelSpaceTan  = inTangent.xyz;
     #endif
@@ -69,7 +71,7 @@ void main(){
     #endif
 
     gl_Position = TransformWorldViewProjection(modelSpacePos);
-    texCoord = inTexCoord;
+    //texCoord = inTexCoord;
     #ifdef SEPARATE_TEXCOORD
        texCoord2 = inTexCoord2;
     #endif
@@ -86,4 +88,6 @@ void main(){
     #ifdef VERTEX_COLOR
         Color *= inColor;
     #endif
+
+    worldNormal = (g_WorldMatrix * vec4(modelSpaceNorm, 0.0)).xyz;
 }

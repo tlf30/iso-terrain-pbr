@@ -32,6 +32,7 @@ public class MaterialManager {
         // this.earthMaterial = createBasicMaterial(assetManager);
         // this.earthMaterial = createUnlitMaterial(assetManager);
         this.earthMaterial = createPbrMaterial(assetManager);
+        //this.earthMaterial = createUnshadedMaterial(assetManager);
     }
 
     public Material getEarthMaterial() {
@@ -149,9 +150,9 @@ public class MaterialManager {
         diffuseTextures.add(assetManager.loadTexture("Textures/Earth/sand_diffuse.jpg").getImage());
 
         TextureArray diffuseArray = new TextureArray(diffuseTextures);
-        //diffuseArray.setWrap(WrapMode.Repeat);
-        //diffuseArray.setMinFilter(MinFilter.Trilinear);
-        //diffuseArray.setMagFilter(MagFilter.Bilinear);
+        diffuseArray.setWrap(WrapMode.Repeat);
+        diffuseArray.setMinFilter(MinFilter.Trilinear);
+        diffuseArray.setMagFilter(MagFilter.Bilinear);
 
         mat.setTexture("BaseColorMap", diffuseArray);
 
@@ -161,9 +162,9 @@ public class MaterialManager {
         normalTextures.add(assetManager.loadTexture("Textures/Earth/sand_normal.jpg").getImage());
 
         TextureArray normalArray = new TextureArray(normalTextures);
-        //normalArray.setWrap(WrapMode.Repeat);
-        //normalArray.setMinFilter(MinFilter.Trilinear);
-        //normalArray.setMagFilter(MagFilter.Bilinear);
+        normalArray.setWrap(WrapMode.Repeat);
+        normalArray.setMinFilter(MinFilter.Trilinear);
+        normalArray.setMagFilter(MagFilter.Bilinear);
 
         mat.setTexture("NormalMap", normalArray);
 
@@ -182,6 +183,34 @@ public class MaterialManager {
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", ColorRGBA.Blue);
 
+        return mat;
+    }
+
+    private Material createUnshadedMaterial(AssetManager assetManager) {
+        Material mat = new Material(assetManager, "MatDefs/UnshadedArray.j3md");
+        List<Image> diffuseTextures = new ArrayList<>();
+        diffuseTextures.add(assetManager.loadTexture("Textures/Earth/dirt_diffuse.jpg").getImage());
+        diffuseTextures.add(assetManager.loadTexture("Textures/Earth/grass_diffuse.jpg").getImage());
+        diffuseTextures.add(assetManager.loadTexture("Textures/Earth/sand_diffuse.jpg").getImage());
+
+        TextureArray diffuseArray = new TextureArray(diffuseTextures);
+        diffuseArray.setWrap(WrapMode.Repeat);
+        diffuseArray.setMinFilter(MinFilter.Trilinear);
+        diffuseArray.setMagFilter(MagFilter.Bilinear);
+
+        mat.setTexture("ColorMap", diffuseArray);
+
+//        List<Image> normalTextures = new ArrayList<>();
+//        normalTextures.add(assetManager.loadTexture("Textures/Earth/dirt_normal.jpg").getImage());
+//        normalTextures.add(assetManager.loadTexture("Textures/Earth/grass_normal.jpg").getImage());
+//        normalTextures.add(assetManager.loadTexture("Textures/Earth/sand_normal.jpg").getImage());
+//
+//        TextureArray normalArray = new TextureArray(normalTextures);
+//        normalArray.setWrap(WrapMode.Repeat);
+//        normalArray.setMinFilter(MinFilter.Trilinear);
+//        normalArray.setMagFilter(MagFilter.Bilinear);
+//
+//        mat.setTexture("LightMap", normalArray);
         return mat;
     }
 

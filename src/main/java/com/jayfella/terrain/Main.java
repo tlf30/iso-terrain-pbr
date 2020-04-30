@@ -13,7 +13,10 @@ import com.jayfella.terrain.world.World;
 import com.jayfella.terrain.world.WorldType;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
+import com.jme3.light.AmbientLight;
+import com.jme3.light.DirectionalLight;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.system.AppSettings;
@@ -98,13 +101,19 @@ public class Main extends SimpleApplication {
         ApplicationContext appContext = new ApplicationContext(this);
 
         // Anistropic Filtering
-        AnistropicFilteringAssetListener anistropicFilteringAssetListener = new AnistropicFilteringAssetListener(appContext.getAppConfig().getVideoConfig().getAnistropicFilteringLevel());
-        assetManager.addAssetEventListener(anistropicFilteringAssetListener);
+        //AnistropicFilteringAssetListener anistropicFilteringAssetListener = new AnistropicFilteringAssetListener(appContext.getAppConfig().getVideoConfig().getAnistropicFilteringLevel());
+        //assetManager.addAssetEventListener(anistropicFilteringAssetListener);
 
         earth = new AnimaliaWorld(appContext, WorldType.EARTH, 312312, "My World");
         rootNode.attachChild(earth.getWorldNode());
 
         // Add PBR Lighting
+        AmbientLight ambientLight = new AmbientLight(ColorRGBA.White);
+        rootNode.addLight(ambientLight);
+
+        DirectionalLight sun = new DirectionalLight(new Vector3f(-1, -1, -1).normalizeLocal(), ColorRGBA.White);
+        rootNode.addLight(sun);
+
         stateManager.attach(new PbrLighting());
 
         // PostProcessingState postProcessingState = new PostProcessingState(appContext.getAppConfig(), sun);

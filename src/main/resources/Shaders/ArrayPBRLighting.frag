@@ -4,7 +4,8 @@
 #import "Common/ShaderLib/Parallax.glsllib"
 #import "Common/ShaderLib/Lighting.glsllib"
 
-varying vec2 texCoord;
+varying vec3 texCoord;
+varying vec3 worldNormal;
 #ifdef SEPARATE_TEXCOORD
   varying vec2 texCoord2;
 #endif
@@ -103,8 +104,11 @@ varying vec3 wNormal;
 #endif
 
 void main(){
-    vec2 newTexCoord;
+    vec3 newTexCoord;
     vec3 viewDir = normalize(g_CameraPosition - wPosition);
+
+    vec3 blend = abs(normalize(worldNormal));
+    blend /= (blend.x + blend.y + blend.z);
 
     vec3 norm = normalize(wNormal);
     #if defined(NORMALMAP) || defined(PARALLAXMAP)
@@ -112,47 +116,47 @@ void main(){
         mat3 tbnMat = mat3(tan, wTangent.w * cross( (norm), (tan)), norm);
     #endif
 
-    #if (defined(PARALLAXMAP) || (defined(NORMALMAP_PARALLAX) && defined(NORMALMAP)))
-       vec3 vViewDir =  viewDir * tbnMat;
-       #ifdef STEEP_PARALLAX
-           #ifdef NORMALMAP_PARALLAX
-               //parallax map is stored in the alpha channel of the normal map
-               newTexCoord = steepParallaxOffset(texture2DArray(m_NormalMap, vid), vViewDir, texCoord, m_ParallaxHeight);
-           #else
-               //parallax map is a texture
-               newTexCoord = steepParallaxOffset(texture2DArray(m_ParallaxMap, vid), vViewDir, texCoord, m_ParallaxHeight);
-           #endif
-       #else
-           #ifdef NORMALMAP_PARALLAX
-               //parallax map is stored in the alpha channel of the normal map
-               newTexCoord = classicParallaxOffset(texture2DArray(m_NormalMap, vid), vViewDir, texCoord, m_ParallaxHeight);
-           #else
-               //parallax map is a texture
-               newTexCoord = classicParallaxOffset(texture2DArray(m_ParallaxMap, vid), vViewDir, texCoord, m_ParallaxHeight);
-           #endif
-       #endif
-    #else
-       newTexCoord = texCoord;
-    #endif
-
     #ifdef BASECOLORMAP
-        vec4 albedo = texture(m_BaseColorMap, vec3(newTexCoord,vid)) * Color;
+        vec4 xalbedo = texture2DArray(m_BaseColorMap, vec3(texCoord.zy, vid));
+        vec4 yalbedo = texture2DArray(m_BaseColorMap, vec3(texCoord.xz, vid));
+        vec4 zalbedo = texture2DArray(m_BaseColorMap, vec3(texCoord.xy, vid));
+        vec4 albedo = xalbedo * blend.x
+            + yalbedo * blend.y
+            + zalbedo * blend.z;
     #else
         vec4 albedo = Color;
     #endif
 
     #ifdef USE_PACKED_MR
-        vec2 rm = texture(m_MetallicRoughnessMap, vec3(newTexCoord,vid)).gb;
+        vec4 xrm = texture2DArray(m_MetallicRoughnessMap, vec3(texCoord.zy, vid));
+        vec4 yrm = texture2DArray(m_MetallicRoughnessMap, vec3(texCoord.xz, vid));
+        vec4 zrm = texture2DArray(m_MetallicRoughnessMap, vec3(texCoord.xy, vid));
+        vec4 crm = xrm * blend.x
+            + yrm * blend.y
+            + zrm * blend.z;
+        vec2 rm = crm.gb;
         float Roughness = rm.x * max(m_Roughness, 1e-4);
         float Metallic = rm.y * max(m_Metallic, 0.0);
     #else
         #ifdef ROUGHNESSMAP
-            float Roughness = texture(m_RoughnessMap, vec3(newTexCoord,vid)).r * max(m_Roughness, 1e-4);
+            vec4 xRoughness = texture2DArray(m_RoughnessMap, vec3(texCoord.zy, vid));
+            vec4 yRoughness = texture2DArray(m_RoughnessMap, vec3(texCoord.xz, vid));
+            vec4 zRoughness = texture2DArray(m_RoughnessMap, vec3(texCoord.xy, vid));
+            vec4 cRoughness = xRoughness * blend.x
+                + yRoughness * blend.y
+                + zRoughness * blend.z;
+            float Roughness = cRoughness.r * max(m_Roughness, 1e-4);
         #else
             float Roughness =  max(m_Roughness, 1e-4);
         #endif
         #ifdef METALLICMAP
-            float Metallic = texture(m_MetallicMap, vec3(newTexCoord,vid)).r * max(m_Metallic, 0.0);
+            vec4 xMetallic = texture2DArray(m_MetallicMap, vec3(texCoord.zy, vid));
+            vec4 yMetallic = texture2DArray(m_MetallicMap, vec3(texCoord.xz, vid));
+            vec4 zMetallic = texture2DArray(m_MetallicMap, vec3(texCoord.xy, vid));
+            vec4 cMetallic = xMetallic * blend.x
+                + yMetallic * blend.y
+                + zMetallic * blend.z;
+            float Metallic = cMetallic.r * max(m_Metallic, 0.0);
         #else
             float Metallic =  max(m_Metallic, 0.0);
         #endif
@@ -170,14 +174,20 @@ void main(){
     // Read from textures
     // ***********************
     #if defined(NORMALMAP)
-      vec4 normalHeight = texture(m_NormalMap, vec3(newTexCoord,vid));
-      //Note the -2.0 and -1.0. We invert the green channel of the normal map,
-      //as it's complient with normal maps generated with blender.
-      //see http://hub.jmonkeyengine.org/forum/topic/parallax-mapping-fundamental-bug/#post-256898
-      //for more explanation.
-      vec3 normal = normalize((normalHeight.xyz * vec3(2.0, NORMAL_TYPE * 2.0, 2.0) - vec3(1.0, NORMAL_TYPE * 1.0, 1.0)));
-      normal = normalize(tbnMat * normal);
-      //normal = normalize(normal * inverse(tbnMat));
+        vec4 xnormalHeight = texture2DArray(m_NormalMap, vec3(texCoord.zy, vid));
+        vec4 ynormalHeight = texture2DArray(m_NormalMap, vec3(texCoord.xz, vid));
+        vec4 znormalHeight = texture2DArray(m_NormalMap, vec3(texCoord.xy, vid));
+        vec4 normalHeight = xnormalHeight * blend.x
+            + ynormalHeight * blend.y
+            + znormalHeight * blend.z;
+
+        //Note the -2.0 and -1.0. We invert the green channel of the normal map,
+        //as it's complient with normal maps generated with blender.
+        //see http://hub.jmonkeyengine.org/forum/topic/parallax-mapping-fundamental-bug/#post-256898
+        //for more explanation.
+        vec3 normal = normalize((normalHeight.xyz * vec3(2.0, NORMAL_TYPE * 2.0, 2.0) - vec3(1.0, NORMAL_TYPE * 1.0, 1.0)));
+        normal = normalize(tbnMat * normal);
+        //normal = normalize(normal * inverse(tbnMat));
     #else
       vec3 normal = norm;
     #endif
@@ -185,17 +195,34 @@ void main(){
     #ifdef SPECGLOSSPIPELINE
 
         #ifdef USE_PACKED_SG
-            vec4 specularColor = texture(m_SpecularGlossinessMap, vec3(newTexCoord,vid));
+            vec4 xspecularColor = texture2DArray(m_SpecularGlossinessMap, vec3(texCoord.zy, vid));
+            vec4 yspecularColor = texture2DArray(m_SpecularGlossinessMap, vec3(texCoord.xz, vid));
+            vec4 zspecularColor = texture2DArray(m_SpecularGlossinessMap, vec3(texCoord.xy, vid));
+            vec4 specularColor = xspecularColor * blend.x
+                + yspecularColor * blend.y
+                + zspecularColor * blend.z;
+
             float glossiness = specularColor.a * m_Glossiness;
             specularColor *= m_Specular;
         #else
             #ifdef SPECULARMAP
-                vec4 specularColor = texture(m_SpecularMap, vec3(newTexCoord,vid));
+                vec4 xspecularColor = texture2DArray(m_SpecularGlossinessMap, vec3(texCoord.zy, vid));
+                vec4 yspecularColor = texture2DArray(m_SpecularGlossinessMap, vec3(texCoord.xz, vid));
+                vec4 zspecularColor = texture2DArray(m_SpecularGlossinessMap, vec3(texCoord.xy, vid));
+                vec4 specularColor = xspecularColor * blend.x
+                    + yspecularColor * blend.y
+                    + zspecularColor * blend.z;
             #else
                 vec4 specularColor = vec4(1.0);
             #endif
             #ifdef GLOSSINESSMAP
-                float glossiness = texture(m_GlossinessMap, vec3(newTexCoord,vid)).r * m_Glossiness;
+                vec4 xglossiness = texture2DArray(m_GlossinessMap, vec3(texCoord.zy, vid));
+                vec4 yglossiness = texture2DArray(m_GlossinessMap, vec3(texCoord.xz, vid));
+                vec4 zglossiness = texture2DArray(m_GlossinessMap, vec3(texCoord.xy, vid));
+                vec4 cglossiness = xglossiness * blend.x
+                    + yglossiness * blend.y
+                    + zglossiness * blend.z;
+                float glossiness = cglossiness.r * m_Glossiness;
             #else
                 float glossiness = m_Glossiness;
             #endif
@@ -220,7 +247,13 @@ void main(){
        #ifdef SEPARATE_TEXCOORD
           lightMapColor = texture(m_LightMap, vec3(texCoord2,vid)).rgb;
        #else
-          lightMapColor = texture(m_LightMap, vec3(texCoord,vid)).rgb;
+           vec4 xlightMapColor = texture2DArray(m_LightMap, vec3(texCoord.zy, vid));
+           vec4 ylightMapColor = texture2DArray(m_LightMap, vec3(texCoord.xz, vid));
+           vec4 zlightMapColor = texture2DArray(m_LightMap, vec3(texCoord.xy, vid));
+           vec4 clightMapColor = xlightMapColor * blend.x
+               + ylightMapColor * blend.y
+               + zlightMapColor * blend.z;
+          lightMapColor = clightMapColor.rgb;
        #endif
        #ifdef AO_MAP
          lightMapColor.gb = lightMapColor.rr;
@@ -314,7 +347,12 @@ void main(){
 
     #if defined(EMISSIVE) || defined (EMISSIVEMAP)
         #ifdef EMISSIVEMAP
-            vec4 emissive = texture(m_EmissiveMap, vec3(newTexCoord,vid));
+            vec4 xemissive = texture2DArray(m_EmissiveMap, vec3(texCoord.zy, vid));
+            vec4 yemissive = texture2DArray(m_EmissiveMap, vec3(texCoord.xz, vid));
+            vec4 zemissive = texture2DArray(m_EmissiveMap, vec3(texCoord.xy, vid));
+            vec4 emissive = xemissive * blend.x
+            + yemissive * blend.y
+            + zemissive * blend.z;
         #else
             vec4 emissive = m_Emissive;
         #endif
